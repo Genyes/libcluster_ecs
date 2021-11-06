@@ -1,14 +1,15 @@
-defmodule ClusterEC2.Mixfile do
+defmodule ClusterECS.Mixfile do
   use Mix.Project
+  @git_repo "https://github.com/Genyes/libcluster_ecs"
 
   def project do
     [
-      app: :libcluster_ec2,
+      app: :libcluster_ecs,
       version: "0.6.0",
       elixir: "~> 1.4",
-      name: "libcluster_ec2",
-      source_url: "https://github.com/kyleaa/libcluster_ec2",
-      homepage_url: "https://github.com/kyleaa/libcluster_ec2",
+      name: "libcluster_ecs",
+      source_url: @git_repo,
+      homepage_url: @git_repo,
       description: description(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -29,7 +30,7 @@ defmodule ClusterEC2.Mixfile do
     [
       {:libcluster, "~> 2.0 or ~> 3.0"},
       {:ex_aws, "~> 2.0"},
-      {:ex_aws_ec2, "~> 2.0"},
+      {:ex_aws_ecs, "~> 0.1.2"},
       {:sweet_xml, "~> 0.6"},
       {:hackney, "~> 1.8"},
       {:poison, ">= 1.0.0"},
@@ -40,16 +41,16 @@ defmodule ClusterEC2.Mixfile do
 
   defp description do
     """
-    EC2 clustering strategy for libcluster
+    ECS clustering strategy for libcluster
     """
   end
 
   def package do
     [
-      maintainers: ["Kyle Anderson"],
+      maintainers: ["Youth and Educators Succeeding"],
       licenses: ["MIT License"],
       links: %{
-        "GitHub" => "https://github.com/kyleaa/libcluster_ec2.git"
+        "GitHub" => "#{@git_repo}.git"
       }
     ]
   end
