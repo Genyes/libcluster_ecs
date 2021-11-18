@@ -25,7 +25,6 @@ defmodule ClusterECS.Strategy.ServiceName do
   | `:ecs_clustername` | yes | Name of the ECS cluster to search within. |
   | `:ecs_servicename` | yes | Name of the ECS service to look for. |
   | `:app_prefix` | no | Will be prepended to the node's discovered DNS name to create the node name. |
-  | `:ip_type` | no | One of :private or :public, defaults to :private |
   | `:metadata_to_nodename` | no | defaults to `app_prefix@node_dns_name` but can be used to override the nodename |
   | `:polling_interval` | no | Number of milliseconds to wait between polls to the ECS api. Defaults to 5_000 |
   | `:show_debug` | no | True or false, whether or not to show the debug log. Defaults to true |
@@ -34,7 +33,6 @@ defmodule ClusterECS.Strategy.ServiceName do
   use GenServer
   use Cluster.Strategy
   import Cluster.Logger
-  import SweetXml, only: [sigil_x: 2]
 
   alias Cluster.Strategy.State
 
@@ -162,12 +160,12 @@ defmodule ClusterECS.Strategy.ServiceName do
   # only public for testing
   @doc false
   def get_cluster_arn_by_name(target_cluster_name, exaws_options \\ []) do
-    exaws_opspec = ExAws.ECS.list_clusters()
+    exaws_opspec = ExAws.ECS.list_clusters(region: "us-east-2")
     filter_callback = fn elm ->
         [_, cluster_name] = String.split(elm, "/", parts: 2)
         cluster_name === target_cluster_name
       end
-    with {:ok, %{"clusterArns" => [_|_] = arn_list}} <- ExAws.request(exaws_opspec, exaws_options),
+    with {:ok, %{"clusterArns" => [_|_] = arn_list}} <- ExAws.request(exaws_opspec),
       ret when is_binary(ret) <- Enum.find(arn_list, filter_callback)
     do {:ok, ret}
     else
@@ -210,7 +208,7 @@ defmodule ClusterECS.Strategy.ServiceName do
   @doc false
   def map_ecs_enis_to_containers(%{"tasks" => container_meta}) do
     container_meta
-    |> Enum.map(fn %{"attachments" => netifs, "containers" => containers} = ecs_task ->
+    |> Enum.map(fn %{"attachments" => netifs, "containers" => containers} ->
         # transform the attachments list into an ID=>info map
         netifs_by_uuid = Map.new(netifs, fn %{"id" => k, "details" => detail_list} = netif ->
             {k, %{netif | "details" => 
@@ -237,13 +235,5 @@ defmodule ClusterECS.Strategy.ServiceName do
     |> Enum.map(fn {_k, {val1, _}} -> val1 end)
     |> List.flatten()
     |> Enum.map(fn elm -> app_prefix <> "@" <> elm end)
-  end
-
-  # kept around for reference, not used.
-  defp ip_to_nodename(list, app_prefix) when is_list(list) do
-    list
-    |> Enum.map(fn ip ->
-      :"#{app_prefix}@#{ip}"
-    end)
   end
 end
