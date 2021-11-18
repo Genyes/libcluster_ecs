@@ -1,4 +1,4 @@
-defmodule ClusterEC2.Strategy.Tags do
+defmodule ClusterECS.Strategy.Tags do
   @moduledoc """
   This clustering strategy works by loading all instances that have the given
   tag associated with them.
@@ -23,12 +23,12 @@ defmodule ClusterEC2.Strategy.Tags do
 
   | Key | Required | Description |
   | --- | -------- | ----------- |
-  | `:ec2_tagname` | yes | Name of the EC2 instance tag to look for. |
+  | `:ec2_tagname` | yes | Name of the ECS instance tag to look for. |
   | `:ec2_tagvalue` | no | Can be passed a static value (string), a 0-arity function, or a 1-arity function (which will be passed the value of `:ec2_tagname` at invocation). |
   | `:app_prefix` | no | Will be prepended to the node's private IP address to create the node name. |
   | `:ip_type` | no | One of :private or :public, defaults to :private |
   | `:ip_to_nodename` | no | defaults to `app_prefix@ip` but can be used to override the nodename |
-  | `:polling_interval` | no | Number of milliseconds to wait between polls to the EC2 api. Defaults to 5_000 |
+  | `:polling_interval` | no | Number of milliseconds to wait between polls to the ECS api. Defaults to 5_000 |
   | `:show_debug` | no | True or false, whether or not to show the debug log. Defaults to true |
   """
 
@@ -123,10 +123,11 @@ defmodule ClusterEC2.Strategy.Tags do
 
   @spec get_nodes(State.t()) :: {:ok, [atom()]} | {:error, []}
   defp get_nodes(%State{topology: topology, config: config}) do
-    instance_id = ClusterEC2.local_instance_id()
-    region = ClusterEC2.instance_region()
-    tag_name = Keyword.fetch!(config, :ec2_tagname)
-    tag_value = Keyword.get(config, :ec2_tagvalue, &local_instance_tag_value(&1, instance_id, region))
+    instance_id = ClusterECS.local_instance_arn()
+    region = ClusterECS.instance_region()
+
+    tag_name = Keyword.fetch!(config, :ecs_tagname)
+    tag_value = Keyword.get(config, :ecs_tagvalue, &local_instance_tag_value(&1, instance_id, region))
     app_prefix = Keyword.get(config, :app_prefix, "app")
     ip_to_nodename = Keyword.get(config, :ip_to_nodename, &ip_to_nodename/2)
     show_debug? = Keyword.get(config, :show_debug, true)
@@ -134,7 +135,7 @@ defmodule ClusterEC2.Strategy.Tags do
     cond do
       tag_name != nil and tag_value != nil and app_prefix != nil and instance_id != "" and region != "" ->
         params = [filters: ["tag:#{tag_name}": fetch_tag_value(tag_name, tag_value), "instance-state-name": "running"]]
-        request = ExAws.EC2.describe_instances(params)
+        request = ExAws.ECS.describe_instances(params)
         require Logger
         if show_debug?, do: Logger.debug("#{inspect(request)}")
 
@@ -160,16 +161,18 @@ defmodule ClusterEC2.Strategy.Tags do
         {:error, []}
 
       tag_name == nil ->
-        warn(topology, "ec2 tags strategy is selected, but :ec2_tagname is not configured!")
+        warn(topology, "ecs tags strategy is selected, but :ecs_tagname is not configured!")
         {:error, []}
 
       :else ->
-        warn(topology, "ec2 tags strategy is selected, but is not configured!")
+        warn(topology, "ecs tags strategy is selected, but is not configured!")
         {:error, []}
     end
   end
 
   defp local_instance_tag_value(tag_name, instance_id, region) do
+    raise {:error, :not_implemented, [argv: [tag_name: tag_name, instance_id: instance_id, region: region]]}
+
     ExAws.EC2.describe_instances(instance_id: instance_id)
     |> local_instance_tags(region)
     |> Map.get(tag_name)
