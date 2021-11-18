@@ -41,4 +41,6 @@ if Mix.env() == :test do
     secret_access_key: "xxx"
 
   config :tesla, adapter: Tesla.Mock
+
+  config :libcluster_ecs, :api_endpoint, "https://169.254.169.254"
 end
