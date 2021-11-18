@@ -33,7 +33,7 @@ use Mix.Config
 config :libcluster_ecs, :json_parser, Jason
 
 # default value; you *will* need to override this in your run-time config!
-config :libcluster_ecs, :api_endpoint, System.get_env("ECS_CONTAINER_METADATA_URI_V4")
+config :libcluster_ecs, :api_base_uri, System.get_env("ECS_CONTAINER_METADATA_URI_V4")
 
 if Mix.env() == :test do
   config :ex_aws,
@@ -42,5 +42,5 @@ if Mix.env() == :test do
 
   config :tesla, adapter: Tesla.Mock
 
-  config :libcluster_ecs, :api_endpoint, "https://169.254.169.254"
+  config :libcluster_ecs, :api_base_uri, "https://169.254.169.254"
 end
