@@ -29,6 +29,12 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
+# default value, override in your build-time or run-time config as desired.
+config :libcluster_ecs, :json_parser, Jason
+
+# default value; you *will* need to override this in your run-time config!
+config :libcluster_ecs, :api_endpoint, System.get_env("ECS_CONTAINER_METADATA_URI_V4")
+
 if Mix.env() == :test do
   config :ex_aws,
     access_key_id: "xxx",
