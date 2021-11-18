@@ -35,7 +35,7 @@ defmodule ClusterECS do
       {:ok, %{status: 200, body: body}} ->
         body
         |> @json_parser.decode!()
-        |> Map.get!("ContainerARN")
+        |> Map.fetch!("ContainerARN")
     end
   end
 
@@ -48,7 +48,7 @@ defmodule ClusterECS do
       {:ok, %{status: 200, body: body}} ->
         body
         |> @json_parser.decode!()
-        |> Map.get!("AvailabilityZone")
+        |> Map.fetch!("AvailabilityZone")
         |> String.slice(0..-2)
     end
   end
