@@ -29,11 +29,11 @@ defmodule ClusterECS.Mixfile do
   defp deps do
     [
       {:libcluster, "~> 2.0 or ~> 3.0"},
-      {:ex_aws, "~> 2.0"},
+      {:ex_aws, "~> 2.2"},
       {:ex_aws_ecs, "~> 0.1.2"},
       {:sweet_xml, "~> 0.6"},
       {:hackney, "~> 1.8"},
-      {:poison, ">= 1.0.0"},
+      {:jason, "~> 1.2"},
       {:tesla, "~> 1.0"},
       {:ex_doc, ">= 0.0.0", only: :dev}
     ]
