@@ -128,10 +128,10 @@ defmodule ClusterECS.Strategy.ServiceName do
 
     cond do
       app_prefix != nil and instance_id != "" and region != "" ->
-        with {:ok, cluster_arn} <- get_cluster_arn_by_name(cluster_name),
-          {:ok, service_arn} <- get_service_arn_by_name(cluster_arn, service_name),
-          {:ok, task_arns} <- get_task_arns_by_service(cluster_arn, service_arn),
-          {:ok, container_meta} <- describe_tasks_by_arn(cluster_arn, task_arns)
+        with {:ok, cluster_arn} <- get_cluster_arn_by_name(cluster_name, show_debug?),
+          {:ok, service_arn} <- get_service_arn_by_name(cluster_arn, service_name, show_debug?),
+          {:ok, task_arns} <- get_task_arns_by_service(cluster_arn, service_arn, show_debug?),
+          {:ok, container_meta} <- describe_tasks_by_arn(cluster_arn, task_arns, show_debug?)
         do
           resp = container_meta
             |> map_ecs_enis_to_containers()
@@ -159,13 +159,21 @@ defmodule ClusterECS.Strategy.ServiceName do
 
   # only public for testing
   @doc false
-  def get_cluster_arn_by_name(target_cluster_name, exaws_options \\ []) do
+  def get_cluster_arn_by_name(target_cluster_name, show_debug?, exaws_options \\ []) do
     exaws_opspec = ExAws.ECS.list_clusters(region: "us-east-2")
+    if show_debug? do
+      require Logger
+      Logger.debug(fn ->
+        [inspect(exaws_opspec, label: "ExAWS request"),
+          inspect(target_cluster_name, label: "target cluster name")]
+        |> Enum.join("\n")
+      end)
+    end
     filter_callback = fn elm ->
         [_, cluster_name] = String.split(elm, "/", parts: 2)
         cluster_name === target_cluster_name
       end
-    with {:ok, %{"clusterArns" => [_|_] = arn_list}} <- ExAws.request(exaws_opspec),
+    with {:ok, %{"clusterArns" => [_|_] = arn_list}} <- ExAws.request(exaws_opspec, exaws_options),
       ret when is_binary(ret) <- Enum.find(arn_list, filter_callback)
     do {:ok, ret}
     else
@@ -175,8 +183,16 @@ defmodule ClusterECS.Strategy.ServiceName do
   end
 
   @doc false
-  def get_service_arn_by_name(cluster_arn, target_service_name, exaws_options \\ []) do
+  def get_service_arn_by_name(cluster_arn, target_service_name, show_debug?, exaws_options \\ []) do
     exaws_opspec = ExAws.ECS.list_services([cluster: cluster_arn])
+    if show_debug? do
+      require Logger
+      Logger.debug(fn ->
+        [inspect(exaws_opspec, label: "ExAWS request"),
+          inspect(target_service_name, label: "target service name")]
+        |> Enum.join("\n")
+      end)
+    end
     filter_callback = fn elm ->
         [_, service_name] = String.split(elm, "/", parts: 2)
         service_name === target_service_name
@@ -191,18 +207,25 @@ defmodule ClusterECS.Strategy.ServiceName do
   end
 
   @doc false
-  def get_task_arns_by_service(cluster_arn, service_arn, exaws_options \\ []) do
+  def get_task_arns_by_service(cluster_arn, service_arn, show_debug?, exaws_options \\ []) do
     exaws_opspec = ExAws.ECS.list_tasks(cluster_arn, [service: service_arn])
+    if show_debug? do
+      require Logger
+      Logger.debug(fn -> inspect(exaws_opspec, label: "ExAWS request") end)
+    end
     with {:ok, %{"taskArns" => [_|_] = arn_list}} <- ExAws.request(exaws_opspec, exaws_options) do
       {:ok, arn_list}
     end
   end
 
   @doc false
-  def describe_tasks_by_arn(cluster_arn, task_arns, exaws_options \\ []) when is_list(task_arns) do
-    cluster_arn
-    |> ExAws.ECS.describe_tasks(task_arns)
-    |> ExAws.request(exaws_options)
+  def describe_tasks_by_arn(cluster_arn, task_arns, show_debug?, exaws_options \\ []) when is_list(task_arns) do
+    exaws_opspec = ExAws.ECS.describe_tasks(cluster_arn, task_arns)
+    if show_debug? do
+      require Logger
+      Logger.debug(fn -> inspect(exaws_opspec, label: "ExAWS request") end)
+    end
+    ExAws.request(exaws_opspec, exaws_options)
   end
 
   @doc false
