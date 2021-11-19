@@ -27,15 +27,39 @@ defmodule ClusterECS do
   plug(Tesla.Middleware.BaseUrl, resolve_tesla_base())
 
   @doc """
-  Queries the local ECS instance metadata API to determine the instance ARN of the current container.
+  Queries the local ECS instance metadata V4 API to determine the instance ARN of the current container.
+  If the base path 404s, fall back to extracting the current container's metadata from the task's metadata.
   """
   @spec local_instance_arn() :: binary()
   def local_instance_arn do
-    case get("/") do
-      {:ok, %{status: 200, body: body}} ->
-        body
-        |> @json_parser.decode!()
-        |> Map.fetch!("ContainerARN")
+    with {:ok, %{status: 200, body: body}} <- get("/"),
+      {:ok, %{"ContainerARN" => result}} <- @json_parser.decode()
+    do
+      result
+    else
+      {:ok, %{status: 404}} -> local_instance_arn_404workaround()
+      {:ok, bogus_result} -> {:error, bogus_result}
+    end
+  end
+
+  # Sometimes the V4 API endpoint returns 404 for the container metadata, for reasons unknown.
+  # If that happens, get the task metadata, find the container by its DNS name, and extract the ARN from there.
+  defp local_instance_arn_404workaround do
+    with {:ok, %{status: 200, body: body_text}} <- Tesla.get("/task"),
+      {:ok, %{"Containers" => container_list}} <- @json_parser.decode(body_text)
+    do
+      [_, my_dns_name] = node()
+        |> Atom.to_string()
+        |> String.split("@", parts: 2)
+
+      container_list
+      |> Enum.find(fn %{"Networks" => nets} ->
+          Enum.any?(nets, fn
+            %{"PrivateDNSName" => ^my_dns_name} -> true
+            _ -> false
+          end)
+        end)
+      |> Map.fetch!("ContainerARN")
     end
   end
 
