@@ -15,7 +15,9 @@ defmodule ClusterECS do
     Usually accessible via `System.get_env("ECS_CONTAINER_METADATA_URI_V4")` at runtime.
   """
 
-  @json_parser Application.fetch_env!(:libcluster_ecs, :json_parser)
+  defp json_parser do
+    Application.fetch_env!(:libcluster_ecs, :json_parser)
+  end
 
   defp resolve_tesla_base() do
     case Application.get_env(:libcluster_ecs, :api_base_uri) do
@@ -32,9 +34,8 @@ defmodule ClusterECS do
   """
   @spec local_instance_arn() :: binary()
   def local_instance_arn do
-    require @json_parser
     with {:ok, %{status: 200, body: body}} <- get("/"),
-      {:ok, %{"ContainerARN" => result}} <- @json_parser.decode()
+      {:ok, %{"ContainerARN" => result}} <- json_parser().decode()
     do
       result
     else
@@ -46,9 +47,8 @@ defmodule ClusterECS do
   # Sometimes the V4 API endpoint returns 404 for the container metadata, for reasons unknown.
   # If that happens, get the task metadata, find the container by its DNS name, and extract the ARN from there.
   defp local_instance_arn_404workaround do
-    require @json_parser
     with {:ok, %{status: 200, body: body_text}} <- Tesla.get("/task"),
-      {:ok, %{"Containers" => container_list}} <- @json_parser.decode(body_text)
+      {:ok, %{"Containers" => container_list}} <- json_parser().decode(body_text)
     do
       [_, my_dns_name] = node()
         |> Atom.to_string()
@@ -70,11 +70,10 @@ defmodule ClusterECS do
   """
   @spec instance_region() :: binary()
   def instance_region do
-    require @json_parser
     case get("/task") do
       {:ok, %{status: 200, body: body}} ->
         body
-        |> @json_parser.decode!()
+        |> json_parser().decode!()
         |> Map.fetch!("AvailabilityZone")
         |> String.slice(0..-2)
     end
