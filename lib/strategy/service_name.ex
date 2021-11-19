@@ -257,6 +257,15 @@ defmodule ClusterECS.Strategy.ServiceName do
     metadata_map
     |> Enum.map(fn {_k, {val1, _}} -> val1 end)
     |> List.flatten()
-    |> Enum.map(fn elm -> app_prefix <> "@" <> elm end)
+    |> Enum.map(fn elm ->
+        nodename_bin = app_prefix <> "@" <> elm
+        try do
+          String.to_existing_atom(nodename_bin)
+        rescue ArgumentError ->
+          require Logger
+          Logger.warn(fn-> "Constructing new atom from binary `#{inspect(nodename_bin)}`" end)
+          String.to_atom(nodename_bin)
+        end
+      end)
   end
 end
