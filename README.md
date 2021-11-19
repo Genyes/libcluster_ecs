@@ -1,17 +1,16 @@
-ClusterEC2
+ClusterECS
 ==========
 
-This is an EC2 clustering strategy for  [libcluster](https://hexdocs.pm/libcluster/). It currently supports identifying nodes based on EC2 tags.
-
-The default `Tags` strategy uses [ex_aws](https://github.com/ex-aws/ex_aws) to query the EC2 DescribeInstances API endpoint. Access to this API should be granted to the EC2 instance profile. See the ExAws docs for additional configuration options.
+This is a collection of ECS clustering strategies for  [libcluster](https://hexdocs.pm/libcluster/). It currently supports identifying nodes based on an EC2 cluster name + service name.
 
 ```
 config :libcluster,
   topologies: [
     example: [
-      strategy: ClusterEC2.Strategy.Tags,
+      strategy: ClusterECS.Strategy.ServiceName,
       config: [
-        ec2_tagname: "elasticbeanstalk:environment-name"
+      	ecs_clustername: "my-ec2-cluster",
+	ecs_servicename: "my-ecs-service"
       ],
     ]
   ]
@@ -20,10 +19,13 @@ config :libcluster,
 ## Installation
 
 The package can be installed
-by adding `libcluster_ec2` to your list of dependencies in `mix.exs`:
+by adding `libcluster_ecs` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:libcluster_ec2, "~> 0.5"}]
+  [{:libcluster_ecs, github: "Genyes/libcluster_ecs"}]
 end
 ```
+
+## Acknowledgements
+This package is directly based on [libcluster\_ec2](https://github.com/kyleaa/libcluster_ec2).

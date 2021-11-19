@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :libcluster_ec2, key: :value
+#     config :libcluster_ecs, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:libcluster_ec2, :key)
+#     Application.get_env(:libcluster_ecs, :key)
 #
 # Or configure a 3rd-party app:
 #

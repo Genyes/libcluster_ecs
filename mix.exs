@@ -5,7 +5,7 @@ defmodule ClusterECS.Mixfile do
   def project do
     [
       app: :libcluster_ecs,
-      version: "0.6.0",
+      version: "0.6.1-pre",
       elixir: "~> 1.4",
       name: "libcluster_ecs",
       source_url: @git_repo,

@@ -1,3 +1,6 @@
+v0.6.1-pre
+- Added strategy: ECS cluster name + service name
+
 v0.6.1-alpha1
 - Forked from https://github.com/kyleaa/libcluster_ec2
 
