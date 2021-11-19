@@ -21,3 +21,7 @@ erl_crash.dump
 
 # Ignore elixir language server files
 /.elixir_ls
+
+# Ignore Vim swapfiles
+.*.sw?
+.sw?

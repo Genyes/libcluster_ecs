@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :libcluster_ec2, key: :value
+#     config :libcluster_ecs, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:libcluster_ec2, :key)
+#     Application.get_env(:libcluster_ecs, :key)
 #
 # Or configure a 3rd-party app:
 #
@@ -29,10 +29,18 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
+# default value, override in your build-time or run-time config as desired.
+config :libcluster_ecs, :json_parser, Jason
+
+# default value; you *will* need to override this in your run-time config!
+config :libcluster_ecs, :api_base_uri, System.get_env("ECS_CONTAINER_METADATA_URI_V4")
+
 if Mix.env() == :test do
   config :ex_aws,
     access_key_id: "xxx",
     secret_access_key: "xxx"
 
   config :tesla, adapter: Tesla.Mock
+
+  config :libcluster_ecs, :api_base_uri, "https://169.254.169.254"
 end

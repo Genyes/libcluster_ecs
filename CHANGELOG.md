@@ -1,3 +1,9 @@
+v0.6.1-pre
+- Added strategy: ECS cluster name + service name
+
+v0.6.1-alpha1
+- Forked from https://github.com/kyleaa/libcluster_ec2
+
 v0.6.0
 - Enhancement: block on startup while attempting first load https://github.com/kyleaa/libcluster_ec2/pull/20
 - Enhancement: allow optional disable of debug logging https://github.com/kyleaa/libcluster_ec2/pull/21/files
