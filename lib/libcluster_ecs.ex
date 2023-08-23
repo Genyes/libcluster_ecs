@@ -23,7 +23,7 @@ defmodule ClusterECS do
     case Application.get_env(:libcluster_ecs, :api_base_uri) do
       nil ->
         require Logger
-        Logger.error(fn-> "App env dump: #{Application.get_all_env(:libcluster_ecs) |> inspect(limit: :infinity)}" end)
+        Logger.error("App env dump: #{Application.get_all_env(:libcluster_ecs) |> inspect(limit: :infinity)}")
         Logger.flush()
         raise ExAws.Error, "ECS Container Metadata API v4: endpoint URI not found. See docs for `ClusterECS` in the `:libcluster_ecs` application.."
       thing when is_binary(thing) -> thing
