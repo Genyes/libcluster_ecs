@@ -21,7 +21,11 @@ defmodule ClusterECS do
 
   defp resolve_tesla_base() do
     case Application.get_env(:libcluster_ecs, :api_base_uri) do
-      nil -> raise ExAws.Error, "ECS Container Metadata API v4: endpoint URI not found. See docs for `ClusterECS` in the `:libcluster_ecs` application.."
+      nil ->
+        require Logger
+        Logger.debug(fn-> "App env dump: #{Application.get_all_env(:libcluster_ecs) |> inspect(limit: :infinity)}" end)
+        Logger.flush()
+        raise ExAws.Error, "ECS Container Metadata API v4: endpoint URI not found. See docs for `ClusterECS` in the `:libcluster_ecs` application.."
       thing when is_binary(thing) -> thing
     end
   end
@@ -34,7 +38,7 @@ defmodule ClusterECS do
   """
   @spec local_instance_arn() :: binary()
   def local_instance_arn do
-    with {:ok, %{status: 200, body: body}} <- get("/"),
+    with {:ok, %{status: 200, body: _body}} <- get("/"),
       {:ok, %{"ContainerARN" => result}} <- json_parser().decode()
     do
       result
